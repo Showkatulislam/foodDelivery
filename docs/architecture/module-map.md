@@ -3,6 +3,7 @@
 ## User Module
 
 Responsibilities:
+
 - Customer registration
 - Authentication
 - User profile
@@ -11,6 +12,7 @@ Responsibilities:
 ## Restaurant Module
 
 Responsibilities:
+
 - Restaurant registration
 - Restaurant profile
 - Restaurant availability
@@ -19,6 +21,7 @@ Responsibilities:
 ## Menu Module
 
 Responsibilities:
+
 - Menu categories
 - Menu items
 - Item pricing
@@ -27,6 +30,7 @@ Responsibilities:
 ## Order Module
 
 Responsibilities:
+
 - Order creation
 - Order validation
 - Order lifecycle
@@ -35,6 +39,7 @@ Responsibilities:
 ## Payment Module
 
 Responsibilities:
+
 - Payment processing
 - Payment status
 - Refunds
@@ -42,6 +47,7 @@ Responsibilities:
 ## Delivery Module
 
 Responsibilities:
+
 - Rider management
 - Delivery assignment
 - Delivery lifecycle
@@ -50,6 +56,7 @@ Responsibilities:
 ## Notification Module
 
 Responsibilities:
+
 - Push notifications
 - Email notifications
 - SMS notifications
@@ -57,6 +64,7 @@ Responsibilities:
 ## Promotion Module
 
 Responsibilities:
+
 - Coupons
 - Discounts
 - Promotion validation
@@ -64,6 +72,7 @@ Responsibilities:
 ## Event Infrastructure
 
 Responsibilities:
+
 - Event contracts
 - Event publishing
 - Event processing

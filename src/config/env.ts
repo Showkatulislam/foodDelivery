@@ -1,20 +1,21 @@
-import dotenv from "dotenv"
-import z from "zod"
-import { envSchema } from "./envSchema.js"
+import dotenv from "dotenv";
+import z from "zod";
+import { envSchema } from "./envSchema.js";
 
-dotenv.config()
+dotenv.config();
 
 const parseEnv = envSchema.safeParse(process.env);
 
-if(!parseEnv.success){
+if (!parseEnv.success) {
     console.error("Invalid environment configuration:.");
-      console.error(parseEnv.error.issues.map((issue) => ({
-    field: issue.path.join("."),
-    message: issue.message,
-  })));
+    console.error(
+        parseEnv.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+        })),
+    );
 
     process.exit(1);
 }
 
-export const env = parseEnv.data
-
+export const env = parseEnv.data;

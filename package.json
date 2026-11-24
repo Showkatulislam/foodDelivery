@@ -16,7 +16,9 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "postinstall": "prisma skills sync || exit 0",
-        "prepare": "husky"
+        "prepare": "husky",
+        "db:migrate": "npx prisma migrate dev",
+        "db:studio": "npx prisma studio"
     },
     "lint-staged": {
         "*.{ts,tsx,js,mjs,cjs}": [

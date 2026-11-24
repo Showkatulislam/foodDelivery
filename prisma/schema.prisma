@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,420 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ==========================================
+// USER DOMAIN
+// ==========================================
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?  @unique
+  role         UserRole @default(CUSTOMER)
+  isActive     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses   Address[]
+  orders      Order[]
+  rider       Rider?
+  memberships RestaurantMembership[]
+
+  @@map("users")
+}
+
+// ==========================================
+// ADDRESS DOMAIN
+// ==========================================
+
+enum AddressLabel {
+  HOME
+  OFFICE
+  OTHER
+}
+
+model Address {
+  id            String       @id @default(uuid())
+  userId        String
+  label         AddressLabel @default(HOME)
+  recipientName String
+  phone         String
+  addressLine   String       @db.Text
+  city          String
+  postalCode    String?
+  latitude      Decimal?     @db.Decimal(10, 7)
+  longitude     Decimal?     @db.Decimal(10, 7)
+  isDefault     Boolean      @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ==========================================
+// RESTAURANT DOMAIN
+// ==========================================
+
+enum RestaurantRole {
+  OWNER
+  MANAGER
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+model Restaurant {
+  id          String  @id @default(uuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+  phone       String?
+  address     String  @db.Text
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships RestaurantMembership[]
+  categories  MenuCategory[]
+  menuItems   MenuItem[]
+  orders      Order[]
+
+  @@map("restaurants")
+}
+
+model RestaurantMembership {
+  id           String           @id @default(uuid())
+  restaurantId String
+  userId       String
+  role         RestaurantRole
+  status       MembershipStatus @default(INVITED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, userId])
+  @@index([userId, status])
+  @@index([restaurantId, status])
+  @@map("restaurant_memberships")
+}
+
+// ==========================================
+// MENU DOMAIN
+// ==========================================
+
+model MenuCategory {
+  id           String  @id @default(uuid())
+  restaurantId String
+  name         String
+  description  String? @db.Text
+  sortOrder    Int     @default(0)
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  menuItems  MenuItem[]
+
+  @@unique([restaurantId, name])
+  @@unique([id, restaurantId])
+  @@index([restaurantId, sortOrder])
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id           String  @id @default(uuid())
+  restaurantId String
+  categoryId   String
+  name         String
+  description  String? @db.Text
+  price        Decimal @db.Decimal(10, 2)
+  isAvailable  Boolean @default(true)
+  sortOrder    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  category   MenuCategory @relation(fields: [categoryId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  orderItems OrderItem[]
+
+  @@index([restaurantId, isAvailable])
+  @@index([categoryId, sortOrder])
+  @@map("menu_items")
+}
+
+// ==========================================
+// RIDER DOMAIN
+// ==========================================
+
+enum RiderStatus {
+  OFFLINE
+  AVAILABLE
+  BUSY
+  SUSPENDED
+}
+
+model Rider {
+  id       String      @id @default(uuid())
+  userId   String      @unique
+  status   RiderStatus @default(OFFLINE)
+  isActive Boolean     @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assignments DeliveryAssignment[]
+
+  @@map("riders")
+}
+
+// ==========================================
+// DELIVERY DOMAIN
+// ==========================================
+
+enum DeliveryStatus {
+  PENDING_ASSIGNMENT
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryAssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+model Delivery {
+  id      String         @id @default(uuid())
+  orderId String         @unique
+  status  DeliveryStatus @default(PENDING_ASSIGNMENT)
+
+  assignedAt  DateTime?
+  pickedUpAt  DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order       Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  assignments DeliveryAssignment[]
+
+  @@index([status, createdAt])
+  @@map("deliveries")
+}
+
+model DeliveryAssignment {
+  id         String                   @id @default(uuid())
+  deliveryId String
+  riderId    String
+  status     DeliveryAssignmentStatus @default(ASSIGNED)
+
+  assignedAt  DateTime  @default(now())
+  acceptedAt  DateTime?
+  rejectedAt  DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+
+  reason String? @db.Text
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  rider    Rider    @relation(fields: [riderId], references: [id], onDelete: Restrict)
+
+  @@index([deliveryId, assignedAt])
+  @@index([riderId, assignedAt])
+  @@index([status, assignedAt])
+  @@map("delivery_assignments")
+}
+
+// ==========================================
+// ORDER DOMAIN
+// ==========================================
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id          String @id @default(uuid())
+  orderNumber String @unique
+
+  userId       String
+  restaurantId String
+  addressId    String?
+
+  status OrderStatus @default(PENDING)
+
+  subtotal       Decimal @db.Decimal(10, 2)
+  deliveryFee    Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal @db.Decimal(10, 2)
+
+  // Historical delivery address snapshot
+  recipientName      String
+  recipientPhone     String
+  deliveryAddress    String  @db.Text
+  deliveryCity       String
+  deliveryPostalCode String?
+
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  address    Address?   @relation(fields: [addressId], references: [id], onDelete: SetNull)
+
+  items         OrderItem[]
+  delivery      Delivery?
+  statusHistory OrderStatusHistory[]
+  payments      Payment[]
+
+  @@index([userId, createdAt])
+  @@index([restaurantId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String  @id @default(uuid())
+  orderId    String
+  menuItemId String?
+
+  // Historical item snapshot
+  itemName  String
+  unitPrice Decimal @db.Decimal(10, 2)
+  quantity  Int
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id      String      @id @default(uuid())
+  orderId String
+  status  OrderStatus
+  note    String?     @db.Text
+
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+// ==========================================
+// PAYMENT DOMAIN
+// ==========================================
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE_PAYMENT
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  orderId               String
+  amount                Decimal       @db.Decimal(10, 2)
+  method                PaymentMethod
+  status                PaymentStatus @default(PENDING)
+  provider              String?
+  providerTransactionId String?       @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
+  @@map("payments")
+}
+
+// ==========================================
+// OUTBOX DOMAIN
+// ==========================================
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+}
+
+model OutboxEvent {
+  id            String       @id @default(uuid())
+  aggregateType String
+  aggregateId   String
+  eventType     String
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+
+  attempts      Int      @default(0)
+  lastError     String?  @db.Text
+  nextAttemptAt DateTime @default(now())
+
+  lockedAt    DateTime?
+  lockedBy    String?
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([status, nextAttemptAt, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
 }

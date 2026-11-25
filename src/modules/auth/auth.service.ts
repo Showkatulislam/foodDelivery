@@ -1,15 +1,18 @@
 import type { User } from "../../../generated/prisma/client.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { hashPassword, verifyPassword } from "../../shared/utils/password.js";
+import { generateRefreshToken } from "../../shared/utils/refresh-token.js";
 import type { IAuthRepository } from "./auth.repository.interface.js";
 import type { ILoginDTO } from "./dto/login.dto.js";
 import type { IRegisterDTO } from "./dto/register.dto.js";
+import type { RefreshTokenService } from "./refresh-token/refresh-token.service.js";
 import type { TokenService } from "./token.service.js";
 
 export class AuthService {
     constructor(
         private readonly authRepository: IAuthRepository,
         private readonly tokenService: TokenService,
+        private readonly refreshTokenService: RefreshTokenService,
     ) {}
 
     public async register(data: IRegisterDTO): Promise<Omit<User, "passwordHash">> {
@@ -36,6 +39,7 @@ export class AuthService {
     public async Login(data: ILoginDTO): Promise<{
         user: Omit<User, "passwordHash">;
         accessToken: string;
+        refreshToken: string;
     }> {
         const user = await this.authRepository.findByEmail(data.email);
 
@@ -54,11 +58,18 @@ export class AuthService {
 
         const accessToken = this.tokenService.generateAccessToken(user);
 
+        const refreshToken = generateRefreshToken();
+
+        const refreshTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+        await this.refreshTokenService.save(user.id, refreshToken, refreshTokenExpiresAt);
+
         const { passwordHash: _, ...safeUser } = user;
 
         return {
             user: safeUser,
             accessToken,
+            refreshToken,
         };
     }
 }

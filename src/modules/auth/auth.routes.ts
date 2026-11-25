@@ -5,6 +5,9 @@ import { authController } from "./auth.module.js";
 import { catchAsync } from "../../shared/middleware/catch-async.js";
 import { loginSchema } from "./validators/login.schema.js";
 import { authenticate } from "../../shared/middleware/auth.middleware.js";
+import { authorize } from "../../shared/middleware/authorize.middleware.js";
+import { UserRole } from "../../../generated/prisma/enums.js";
+import { refreshTokenSchema } from "./validators/refresh-token.schema.js";
 
 const router: Router = Router();
 
@@ -13,5 +16,9 @@ router.post("/register", validate(registerSchema), catchAsync(authController.reg
 router.post("/login", validate(loginSchema), catchAsync(authController.login));
 
 router.get("/me", authenticate, catchAsync(authController.me));
+
+router.get("/admin", authenticate, authorize(UserRole.ADMIN), catchAsync(authController.me));
+
+router.post("/refresh", validate(refreshTokenSchema), catchAsync(authController.refresh));
 
 export default router;

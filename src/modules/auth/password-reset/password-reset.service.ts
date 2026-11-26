@@ -1,11 +1,14 @@
 import { env } from "../../../config/env.js";
-import type { IEmailService } from "../../../shared/interface/email-service.interface.js";
+import type { IEmailService } from "../../../infrastructure/email/email-service.interface.js";
+import { AppError } from "../../../shared/errors/app-error.js";
 import {
     generatePasswordResetToken,
     hashPasswordResetToken,
 } from "../../../shared/utils/password-reset-token.js";
+import { hashPassword } from "../../../shared/utils/password.js";
 import type { IAuthRepository } from "../auth.repository.interface.js";
-import type { IPasswordResetRepository } from "./password-reset.module.js";
+import type { IResetPasswordDTO } from "./dto/reset-password.dto.js";
+import type { IPasswordResetRepository } from "./password-reset.repository.interface.js";
 
 export class PasswordResetService {
     constructor(
@@ -33,8 +36,37 @@ export class PasswordResetService {
             expiresAt,
         });
 
-        const resetUrl = `${env.FRONTEND}/reset-password?=token=${token}`;
+        const resetUrl = `${env.FRONTEND_URL}/reset-password?=token=${token}`;
 
         await this.emailService.sendPasswordResetEmail(user.email, resetUrl);
+    }
+
+    public async resetPassword(data: IResetPasswordDTO): Promise<void> {
+        const tokenHash = hashPasswordResetToken(data.token);
+
+        const resetToken = await this.passwordResetRepository.findByTokenHash(tokenHash);
+
+        if (!resetToken || resetToken.usedAt !== null || resetToken.expiresAt <= new Date()) {
+            throw new AppError(
+                "Invalid or expired password reset token",
+                400,
+                "INVALIED_PASSWORD_RESET_TOKEN",
+            );
+        }
+
+        const passwordHash = await hashPassword(data.newPassword);
+
+        const isResetSuccessful = await this.passwordResetRepository.completePasswordReset(
+            resetToken.id,
+            resetToken.userId,
+            passwordHash,
+        );
+        if (!isResetSuccessful) {
+            throw new AppError(
+                "Invalid or expired password reset token.",
+                400,
+                "INVALID_PASSWORD_RESET_TOKEN",
+            );
+        }
     }
 }

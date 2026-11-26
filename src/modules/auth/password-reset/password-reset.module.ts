@@ -1,17 +1,14 @@
-import type { PasswordResetToken } from "../../../../generated/prisma/client.js";
+import { PasswordResetService } from "./password-reset.service.js";
+import { authRepository } from "../auth.repository.js";
 
-export interface ICreatePasswordResetTokenPayload {
-    userId: string;
-    tokenHash: string;
-    expiresAt: Date;
-}
+// We'll replace this with the actual email service when we implement it.
+import type { emailService } from "../../../infrastructure/email/email.module.js";
+import { PasswordResetRepository } from "./password-reset.repository.js";
 
-export interface IPasswordResetRepository {
-    create(data: ICreatePasswordResetTokenPayload): Promise<PasswordResetToken>;
+const passwordresetRepository = new PasswordResetRepository();
 
-    findByTokenHash(tokenHash: string): Promise<PasswordResetToken | null>;
-
-    revokeAllByUserId(userId: string): Promise<number>;
-
-    consume(id: string): Promise<boolean>;
-}
+export const passwordResetService = new PasswordResetService(
+    authRepository,
+    passwordresetRepository,
+    emailService,
+);

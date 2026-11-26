@@ -3,7 +3,7 @@ import { prisma } from "../../../infrastructure/database/prisma.js";
 import type {
     ICreatePasswordResetTokenPayload,
     IPasswordResetRepository,
-} from "./password-reset.module.js";
+} from "./password-reset.repository.interface.js";
 
 export class PasswordResetRepository implements IPasswordResetRepository {
     //	Store a new reset token hash
@@ -45,5 +45,45 @@ export class PasswordResetRepository implements IPasswordResetRepository {
             },
         });
         return result.count === 1;
+    }
+
+    public async completePasswordReset(
+        tokenId: string,
+        userId: string,
+        passwordHash: string,
+    ): Promise<boolean> {
+        return prisma.$transaction(async (tx) => {
+            const consumedToken = await tx.passwordResetToken.updateMany({
+                where: {
+                    id: tokenId,
+                    userId,
+                    usedAt: null,
+                    expiresAt: { gt: new Date() },
+                },
+                data: {
+                    usedAt: new Date(),
+                },
+            });
+
+            if (consumedToken.count !== 1) {
+                return false;
+            }
+
+            await tx.user.update({
+                where: { id: userId },
+                data: { passwordHash },
+            });
+
+            await tx.refreshToken.updateMany({
+                where: {
+                    userId,
+                    revokedAt: null,
+                },
+                data: {
+                    revokedAt: new Date(),
+                },
+            });
+            return true;
+        });
     }
 }

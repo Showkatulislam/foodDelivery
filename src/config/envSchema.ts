@@ -25,5 +25,10 @@ export const envSchema = z.object({
 
     CORS_ORIGIN: z.string().min(1).default("http://localhost:3000"),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
-    FRONTEND: z.string(),
+    SMTP_HOST: z.string().min(1),
+    SMTP_PORT: z.coerce.number().int().positive(),
+    SMTP_USER: z.string().email(),
+    SMTP_PASSWORD: z.string().min(1),
+    SMTP_FROM: z.string().email(),
+    FRONTEND_URL: z.string().url(),
 });

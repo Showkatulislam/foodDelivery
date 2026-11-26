@@ -23,7 +23,7 @@ export class EmailService implements IEmailService {
                 text: `Use this link to reset your password: ${resetUrl}. This link expires in 15 minutes.`,
                 html: `
                     <div>
-                        <h2>Password Reset</h2>
+                        <h1>Password Reset</h1>
                         <p>We received a request to reset your password.</p>
                         <p>
                             <a href="${resetUrl}">Reset Password</a>

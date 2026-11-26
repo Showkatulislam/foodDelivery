@@ -9,6 +9,7 @@ import { authorize } from "../../shared/middleware/authorize.middleware.js";
 import { UserRole } from "../../../generated/prisma/enums.js";
 import { refreshTokenSchema } from "./validators/refresh-token.schema.js";
 import { logoutSchema } from "./validators/logout.schema.js";
+import passwordResetRoutes from "../auth/password-reset/password-reset.route.js";
 
 const router: Router = Router();
 
@@ -25,5 +26,7 @@ router.post("/refresh", validate(refreshTokenSchema), catchAsync(authController.
 router.post("/logout", validate(logoutSchema), catchAsync(authController.logout));
 
 router.post("/logout-all", authenticate, catchAsync(authController.logoutAll));
+
+router.use(passwordResetRoutes);
 
 export default router;

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../../config/env.js";
 import { AppError } from "../errors/app-error.js";
 import type { UserRole } from "../../../generated/prisma/enums.js";
+import { authRepository } from "../../modules/auth/auth.repository.js";
 
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -11,11 +12,11 @@ export interface AuthenticatedRequest extends Request {
     };
 }
 
-export const authenticate = (
+export const authenticate = async (
     req: AuthenticatedRequest,
     _res: Response,
     next: NextFunction,
-): void => {
+): Promise<void> => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -35,6 +36,19 @@ export const authenticate = (
 
         if (typeof decoded === "string" || !decoded.sub || !decoded.role) {
             return next(new AppError("Invalid authentication token.", 401, "INVALID_TOKEN"));
+        }
+
+        const user = await authRepository.findById(decoded.sub);
+
+        if (!user || !user.isActive) {
+            next(
+                new AppError(
+                    "Your account is inactive or no longer exists.",
+                    401,
+                    "ACCOUNT_INACTIVE",
+                ),
+            );
+            return;
         }
 
         req.user = {

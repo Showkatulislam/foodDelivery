@@ -29,11 +29,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  addresses     Address[]
-  orders        Order[]
-  rider         Rider?
-  memberships   RestaurantMembership[]
-  refreshTokens RefreshToken[]
+  addresses           Address[]
+  orders              Order[]
+  rider               Rider?
+  memberships         RestaurantMembership[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -64,6 +65,23 @@ model RefreshToken {
   @@index([familyId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 // ==========================================

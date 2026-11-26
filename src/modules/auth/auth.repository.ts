@@ -4,6 +4,11 @@ import type { IAuthRepository } from "./auth.repository.interface.js";
 import type { IRegisterDTO } from "./dto/register.dto.js";
 
 export class AuthRepository implements IAuthRepository {
+    public async findById(id: string): Promise<User | null> {
+        return prisma.user.findUnique({
+            where: { id },
+        });
+    }
     public async findByEmail(email: string): Promise<User | null> {
         return prisma.user.findUnique({ where: { email } });
     }

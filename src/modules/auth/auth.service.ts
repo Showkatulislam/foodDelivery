@@ -62,7 +62,8 @@ export class AuthService {
 
         const refreshTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-        await this.refreshTokenService.save(user.id, refreshToken, refreshTokenExpiresAt);
+        const familyId = crypto.randomUUID();
+        await this.refreshTokenService.save(user.id, refreshToken, refreshTokenExpiresAt, familyId);
 
         const { passwordHash: _, ...safeUser } = user;
 

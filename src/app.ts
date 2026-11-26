@@ -1,6 +1,6 @@
 import "./config/env.js";
 import express, { type Express } from "express";
-import { errorHandler } from "./shared/middleware/error.middleware.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 import authRouter from "./modules/auth/auth.routes.js";
 
 export const app: Express = express();

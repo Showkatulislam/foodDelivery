@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { validate } from "../../shared/middleware/validation.middleware.js";
+import { validate } from "../../middlewares/validation.middleware.js";
 import { registerSchema } from "./validators/register.schema.js";
 import { authController } from "./auth.module.js";
-import { catchAsync } from "../../shared/middleware/catch-async.js";
+import { catchAsync } from "../../middlewares/catch-async.js";
 import { loginSchema } from "./validators/login.schema.js";
-import { authenticate } from "../../shared/middleware/auth.middleware.js";
-import { authorize } from "../../shared/middleware/authorize.middleware.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
+import { authorize } from "../../middlewares/authorize.middleware.js";
 import { UserRole } from "../../../generated/prisma/enums.js";
 import { refreshTokenSchema } from "./validators/refresh-token.schema.js";
 import { logoutSchema } from "./validators/logout.schema.js";

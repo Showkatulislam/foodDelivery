@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { passwordResetController } from "./password-reset.module.js";
 import { resetPasswordSchema } from "./validators/reset-password.schema.js";
-import { validate } from "../../../shared/middleware/validation.middleware.js";
+import { validate } from "../../../middlewares/validation.middleware.js";
 import { forgotPasswordSchema } from "./validators/forget-password.schema.js";
 
 const router = Router();

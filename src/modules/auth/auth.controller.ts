@@ -3,7 +3,7 @@ import type { AuthService } from "./auth.service.js";
 import type { IRegisterDTO } from "./dto/register.dto.js";
 import { sendResponse } from "../../shared/utils/send-response.js";
 import type { ILoginDTO } from "./dto/login.dto.js";
-import type { AuthenticatedRequest } from "../../shared/middleware/auth.middleware.js";
+import type { AuthenticatedRequest } from "../../middlewares/auth.middleware.js";
 import type { RefreshTokenService } from "./refresh-token/refresh-token.service.js";
 
 export class AuthController {

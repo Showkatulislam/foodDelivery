@@ -1,7 +1,7 @@
 import { type ErrorRequestHandler } from "express";
-import { AppError } from "../errors/app-error.js";
-import { logger } from "../logger/logger.js";
-import { env } from "../../config/env.js";
+import { AppError } from "../shared/errors/app-error.js";
+import { logger } from "../shared/logger/logger.js";
+import { env } from "../config/env.js";
 
 export const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _next): void => {
     if (error instanceof AppError) {

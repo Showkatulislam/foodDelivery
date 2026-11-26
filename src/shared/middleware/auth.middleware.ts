@@ -2,11 +2,12 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env.js";
 import { AppError } from "../errors/app-error.js";
+import type { UserRole } from "../../../generated/prisma/enums.js";
 
 export interface AuthenticatedRequest extends Request {
     user?: {
         sub: string;
-        role: string;
+        role: UserRole;
     };
 }
 
@@ -38,7 +39,7 @@ export const authenticate = (
 
         req.user = {
             sub: decoded.sub,
-            role: String(decoded.role),
+            role: decoded.role,
         };
 
         next();

@@ -4,9 +4,13 @@ import type { IRegisterDTO } from "./dto/register.dto.js";
 import { sendResponse } from "../../shared/utils/send-response.js";
 import type { ILoginDTO } from "./dto/login.dto.js";
 import type { AuthenticatedRequest } from "../../shared/middleware/auth.middleware.js";
+import type { RefreshTokenService } from "./refresh-token/refresh-token.service.js";
 
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(
+        private readonly authService: AuthService,
+        private readonly refreshTokenService: RefreshTokenService,
+    ) {}
 
     public register = async (req: Request, res: Response): Promise<void> => {
         const data = req.body as IRegisterDTO;
@@ -43,6 +47,41 @@ export class AuthController {
                 userId: req.user?.sub,
                 role: req.user?.role,
             },
+        });
+    };
+
+    public refresh = async (req: Request, res: Response): Promise<void> => {
+        const { refreshToken } = req.body as { refreshToken: string };
+
+        const result = await this.refreshTokenService.refresh(refreshToken);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Token refresh successfully.",
+            data: result,
+        });
+    };
+
+    public logout = async (req: Request, res: Response): Promise<void> => {
+        const { refreshToken } = req.body;
+
+        await this.refreshTokenService.revoke(refreshToken);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Logged out successfully.",
+        });
+    };
+
+    public logoutAll = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+        await this.refreshTokenService.revokeAll(req?.user?.sub as string);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Logout out from all sessions successfully.",
         });
     };
 }

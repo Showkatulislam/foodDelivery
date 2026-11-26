@@ -1,0 +1,13 @@
+import { AppError } from "../errors/app-error.js";
+export const authorize = (...allowedRoles) => {
+    return (req, _res, next) => {
+        if (!req.user) {
+            return next(new AppError("Authentication is required.", 401, "AUTHENTICATION_REQUIRED"));
+        }
+        if (!allowedRoles.includes(req.user.role)) {
+            return next(new AppError("You do not have permission to access this resource.", 403, "FORBIDDEN"));
+        }
+        next();
+    };
+};
+//# sourceMappingURL=authorize.middleware.js.map

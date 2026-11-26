@@ -6,4 +6,4 @@ import { tokenService } from "./token.service.js";
 
 const authService = new AuthService(authRepository, tokenService, refreshTokenService);
 
-export const authController = new AuthController(authService);
+export const authController = new AuthController(authService, refreshTokenService);

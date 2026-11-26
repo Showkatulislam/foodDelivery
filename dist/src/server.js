@@ -1,0 +1,54 @@
+import { app } from "./app.js";
+import { env } from "./config/env.js";
+import { prisma } from "./infrastructure/database/prisma.js";
+let httpServer;
+let isShuttingDown = false;
+const startServer = async () => {
+    try {
+        await prisma.$connect();
+        console.log("PostgreSQL connected successfully.");
+        httpServer = app.listen(env.PORT, () => {
+            console.log(`Server running on port ${env.PORT}`);
+        });
+    }
+    catch (error) {
+        console.error("Application startup failed:", error);
+        await prisma.$disconnect();
+        process.exitCode = 1;
+    }
+};
+const shutdown = async (signal) => {
+    if (isShuttingDown) {
+        return;
+    }
+    isShuttingDown = true;
+    console.log(`${signal} received. Shutting down gracefully...`);
+    try {
+        if (httpServer) {
+            await new Promise((resolve, reject) => {
+                httpServer?.close((error) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve();
+                });
+            });
+        }
+        await prisma.$disconnect();
+        console.log("Application shutdown completed.");
+        process.exitCode = 0;
+    }
+    catch (error) {
+        console.error("Application shutdown failed:", error);
+        process.exitCode = 1;
+    }
+};
+process.on("SIGTERM", () => {
+    void shutdown("SIGTERM");
+});
+process.on("SIGINT", () => {
+    void shutdown("SIGINT");
+});
+void startServer();
+//# sourceMappingURL=server.js.map

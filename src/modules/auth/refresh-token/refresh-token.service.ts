@@ -105,4 +105,20 @@ export class RefreshTokenService {
             refreshToken: newRefreshToken,
         };
     }
+
+    public async revoke(refreshToken: string): Promise<void> {
+        const tokenHash = hashRefreshToken(refreshToken);
+
+        const storedToken = await this.refreshTokenRepository.findByTokenHash(tokenHash);
+
+        if (!storedToken || storedToken.revokedAt) {
+            return;
+        }
+
+        await this.refreshTokenRepository.revoke(storedToken.id);
+    }
+
+    public async revokeAll(userId: string): Promise<void> {
+        await this.refreshTokenRepository.revokedAllByUserId(userId);
+    }
 }

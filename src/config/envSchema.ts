@@ -25,4 +25,5 @@ export const envSchema = z.object({
 
     CORS_ORIGIN: z.string().min(1).default("http://localhost:3000"),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+    FRONTEND: z.string(),
 });

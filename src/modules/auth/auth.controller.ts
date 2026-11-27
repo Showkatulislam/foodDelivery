@@ -3,7 +3,6 @@ import type { AuthService } from "./auth.service.js";
 import type { IRegisterDTO } from "./dto/register.dto.js";
 import { sendResponse } from "../../shared/utils/send-response.js";
 import type { ILoginDTO } from "./dto/login.dto.js";
-import type { AuthenticatedRequest } from "../../middlewares/auth.middleware.js";
 import type { RefreshTokenService } from "./refresh-token/refresh-token.service.js";
 
 export class AuthController {
@@ -38,7 +37,7 @@ export class AuthController {
         });
     };
 
-    public me = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    public me = async (req: Request, res: Response): Promise<void> => {
         sendResponse(res, {
             statusCode: 200,
             success: true,
@@ -75,7 +74,7 @@ export class AuthController {
         });
     };
 
-    public logoutAll = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    public logoutAll = async (req: Request, res: Response): Promise<void> => {
         await this.refreshTokenService.revokeAll(req?.user?.sub as string);
 
         sendResponse(res, {
